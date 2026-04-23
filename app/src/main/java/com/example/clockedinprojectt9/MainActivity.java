@@ -21,5 +21,11 @@ public class MainActivity extends AppCompatActivity {
         binding.actionButton.setOnClickListener(v ->
                 binding.statusText.setText("MainActivity button works")
         );
+
+        binding.logoutButton.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        });
     }
 }
