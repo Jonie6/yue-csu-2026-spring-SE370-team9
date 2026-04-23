@@ -9,9 +9,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.clockedinprojectt9.databinding.ActivityRegisterBinding;
 import com.example.clockedinprojectt9.db.AppDataBase;
 import com.example.clockedinprojectt9.models.User;
+import com.example.clockedinprojectt9.utils.PasswordUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -45,6 +47,16 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(this, "Please enter a valid email", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (password.length() < 8) {
+            Toast.makeText(this, "Password must be at least 8 characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (!password.equals(confirmPassword)) {
             Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
             return;
@@ -60,7 +72,7 @@ public class RegisterActivity extends AppCompatActivity {
             User newUser = new User(
                     username,
                     email,
-                    password, // Should be hashed in a real app
+                    PasswordUtils.hashPassword(password),
                     username, // Display name defaults to username
                     "",       // bio
                     "",       // profileImageUri

@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.clockedinprojectt9.databinding.ActivityLoginBinding;
 import com.example.clockedinprojectt9.db.AppDataBase;
 import com.example.clockedinprojectt9.models.User;
+import com.example.clockedinprojectt9.utils.PasswordUtils;
+import com.example.clockedinprojectt9.utils.SessionManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,11 +19,20 @@ public class LoginActivity extends AppCompatActivity {
 
     private ActivityLoginBinding binding;
     private AppDataBase db;
+    private SessionManager sessionManager;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        sessionManager = new SessionManager(this);
+        if (sessionManager.isLoggedIn()) {
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            finish();
+            return;
+        }
+
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -47,8 +58,9 @@ public class LoginActivity extends AppCompatActivity {
         executorService.execute(() -> {
             User user = db.userDao().getUserByUsername(username);
             runOnUiThread(() -> {
-                if (user != null && user.getPasswordHash().equals(password)) {
+                if (user != null && PasswordUtils.checkPassword(password, user.getPasswordHash())) {
                     // Successful login
+                    sessionManager.createLoginSession(user.getUserId());
                     Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
