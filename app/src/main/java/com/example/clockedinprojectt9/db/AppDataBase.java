@@ -9,11 +9,14 @@ import androidx.room.RoomDatabase;
 import com.example.clockedinprojectt9.dao.EventDao;
 import com.example.clockedinprojectt9.dao.RSVPDao;
 import com.example.clockedinprojectt9.dao.UserDao;
+import com.example.clockedinprojectt9.dao.FriendshipDao;
 import com.example.clockedinprojectt9.models.Event;
 import com.example.clockedinprojectt9.models.RSVP;
 import com.example.clockedinprojectt9.models.User;
+import com.example.clockedinprojectt9.models.Friendship;
 
-@Database(entities = {User.class, Event.class, RSVP.class}, version = 1, exportSchema = false)
+
+@Database(entities = {User.class, Event.class, RSVP.class, Friendship.class}, version = 2, exportSchema = false)
 public abstract class AppDataBase extends RoomDatabase {
 
     private static volatile AppDataBase INSTANCE;
@@ -21,6 +24,8 @@ public abstract class AppDataBase extends RoomDatabase {
     public abstract UserDao userDao();
     public abstract EventDao eventDao();
     public abstract RSVPDao rsvpDao();
+    public abstract FriendshipDao friendshipDao();
+
 
     public static AppDataBase getDatabase(final Context context) {
         if (INSTANCE == null) {
