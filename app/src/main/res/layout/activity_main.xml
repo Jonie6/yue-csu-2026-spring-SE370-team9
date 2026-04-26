@@ -24,12 +24,12 @@
         android:textSize="16sp" />
 
     <Button
-        android:id="@+id/actionButton"
+        android:id="@+id/friendsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="32dp"
-        android:text="Test Button" />
+        android:text="Friends" />
 
     <TextView
         android:id="@+id/statusText"

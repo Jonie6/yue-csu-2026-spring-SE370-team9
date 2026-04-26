@@ -12,15 +12,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Inflate the layout using view binding
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+        
+        // Set the content view to the root of the binding
         setContentView(binding.getRoot());
 
-        binding.titleText.setText("cLockedInProjectT9");
-        binding.subtitleText.setText("Java + XML base project is working");
+        binding.titleText.setText("cLockedIn");
+        binding.subtitleText.setText("Productivity rebuilt");
 
-        binding.actionButton.setOnClickListener(v ->
-                binding.statusText.setText("MainActivity button works")
-        );
+        // Navigate to FriendsActivity when the button is clicked
+        binding.friendsButton.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(MainActivity.this, FriendsActivity.class);
+            startActivity(intent);
+        });
 
         binding.logoutButton.setOnClickListener(v -> {
             new com.example.clockedinprojectt9.utils.SessionManager(MainActivity.this).logoutUser();

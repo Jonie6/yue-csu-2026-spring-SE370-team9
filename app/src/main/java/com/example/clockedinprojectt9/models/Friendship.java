@@ -12,9 +12,8 @@ import androidx.room.Index;
                 @ForeignKey(entity = User.class, parentColumns = "user_id", childColumns = "user_id_1", onDelete = ForeignKey.CASCADE),
                 @ForeignKey(entity = User.class, parentColumns = "user_id", childColumns = "user_id_2", onDelete = ForeignKey.CASCADE)
         },
-        indices = {@Index("user_id_2")} // user_id_1 is already indexed as part of Primary Key
+        indices = {@Index("user_id_2")}
 )
-
 public class Friendship {
     @ColumnInfo(name = "user_id_1")
     public long userId1;
@@ -22,14 +21,17 @@ public class Friendship {
     @ColumnInfo(name = "user_id_2")
     public long userId2;
 
+    @ColumnInfo(name = "sender_id")
+    public long senderId;
+
     @ColumnInfo(name = "status")
     public String status;
 
     @ColumnInfo(name = "created_at")
     public long createdAt;
 
-    public Friendship(long userId1, long userId2, String status, long createdAt) {
-        //logic to ensure user 1 < user 2 to prevent 1,2 and 2,1 existing at once
+    public Friendship(long userId1, long userId2, long senderId, String status, long createdAt) {
+        // logic to ensure user 1 < user 2 to prevent duplicate entries
         if (userId1 < userId2) {
             this.userId1 = userId1;
             this.userId2 = userId2;
@@ -37,9 +39,8 @@ public class Friendship {
             this.userId1 = userId2;
             this.userId2 = userId1;
         }
+        this.senderId = senderId;
         this.status = status;
         this.createdAt = createdAt;
     }
 }
-
-

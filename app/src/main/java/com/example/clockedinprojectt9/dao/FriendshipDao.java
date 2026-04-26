@@ -21,13 +21,20 @@ public interface FriendshipDao {
     @Delete
     void removeFriendship(Friendship friendship);
 
-    // This query finds all Users who are friends with the given userId
     @Query("SELECT * FROM users WHERE user_id IN (" +
             "SELECT user_id_2 FROM friendships WHERE user_id_1 = :userId AND status = 'ACCEPTED' " +
             "UNION " +
             "SELECT user_id_1 FROM friendships WHERE user_id_2 = :userId AND status = 'ACCEPTED')")
     LiveData<List<User>> getFriends(long userId);
 
-    @Query("SELECT * FROM friendships WHERE (user_id_1 = :userId OR user_id_2 = :userId) AND status = 'PENDING'")
-    LiveData<List<Friendship>> getPendingRequests(long userId);
+    // Get users who sent a request to the current user
+    @Query("SELECT * FROM users WHERE user_id IN (" +
+            "SELECT sender_id FROM friendships WHERE " +
+            "((user_id_1 = :userId AND user_id_1 != sender_id) OR " +
+            "(user_id_2 = :userId AND user_id_2 != sender_id)) " +
+            "AND status = 'PENDING')")
+    LiveData<List<User>> getIncomingRequestUsers(long userId);
+
+    @Query("SELECT * FROM friendships WHERE (user_id_1 = :u1 AND user_id_2 = :u2) OR (user_id_1 = :u2 AND user_id_2 = :u1) LIMIT 1")
+    Friendship getFriendship(long u1, long u2);
 }
