@@ -3,7 +3,9 @@ package com.example.clockedinprojectt9.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,7 +20,20 @@ import java.util.List;
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendViewHolder> {
 
     private List<User> friends = new ArrayList<>();
+    private OnFriendClickListener listener;
 
+    public interface OnFriendClickListener {
+        void onRemoveClick(User friend);
+    }
+
+    public FriendAdapter(OnFriendClickListener listener) {
+        this.listener = listener;
+    }
+
+    public FriendAdapter() {
+        // Default constructor if needed
+    }
+    
     @NonNull
     @Override
     public FriendViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -34,6 +49,21 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         
         // Set a default profile picture using a sample avatar resource
         holder.profileImageView.setImageResource(R.drawable.ic_account_box);
+
+        holder.menuButton.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(v.getContext(), v);
+            popup.getMenuInflater().inflate(R.menu.friend_item_menu, popup.getMenu());
+            popup.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.action_remove_friend) {
+                    if (listener != null) {
+                        listener.onRemoveClick(currentFriend);
+                    }
+                    return true;
+                }
+                return false;
+            });
+            popup.show();
+        });
     }
 
     @Override
@@ -49,11 +79,13 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
     class FriendViewHolder extends RecyclerView.ViewHolder {
         private TextView nameTextView;
         private ImageView profileImageView;
+        private ImageButton menuButton;
 
         public FriendViewHolder(@NonNull View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.friendNameText);
             profileImageView = itemView.findViewById(R.id.imageView);
+            menuButton = itemView.findViewById(R.id.menuButtonFriends);
         }
     }
 }

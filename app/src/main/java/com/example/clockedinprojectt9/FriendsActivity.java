@@ -119,7 +119,19 @@ public class FriendsActivity extends AppCompatActivity {
         // 4. Friends List
         RecyclerView friendsRecyclerView = findViewById(R.id.friendsRecyclerView);
         friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        FriendAdapter friendsAdapter = new FriendAdapter();
+        
+        FriendAdapter friendsAdapter = new FriendAdapter(new FriendAdapter.OnFriendClickListener() {
+            @Override
+            public void onRemoveClick(User friend) {
+                executorService.execute(() -> {
+                    Friendship f = db.friendshipDao().getFriendship(currentUserId, friend.getUserId());
+                    if (f != null) {
+                        db.friendshipDao().removeFriendship(f);
+                        runOnUiThread(() -> Toast.makeText(FriendsActivity.this, "Friend removed", Toast.LENGTH_SHORT).show());
+                    }
+                });
+            }
+        });
         friendsRecyclerView.setAdapter(friendsAdapter);
 
         // 5. Observe Database Data
