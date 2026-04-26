@@ -18,20 +18,39 @@ public class MainActivity extends AppCompatActivity {
         // Set the content view to the root of the binding
         setContentView(binding.getRoot());
 
-        binding.titleText.setText("cLockedIn");
-        binding.subtitleText.setText("Productivity rebuilt");
-
         // Navigate to FriendsActivity when the button is clicked
         binding.friendsButton.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(MainActivity.this, FriendsActivity.class);
             startActivity(intent);
         });
 
-        binding.logoutButton.setOnClickListener(v -> {
-            new com.example.clockedinprojectt9.utils.SessionManager(MainActivity.this).logoutUser();
-            android.content.Intent intent = new android.content.Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
-            finish();
+        // Placeholder listeners for new buttons
+        binding.createButton.setOnClickListener(v -> {
+            // TODO: Implement Create functionality
+        });
+
+        binding.msgButton.setOnClickListener(v -> {
+            // TODO: Implement Msg functionality
+        });
+
+        binding.menuButton.setOnClickListener(v -> {
+            android.widget.PopupMenu popup = new android.widget.PopupMenu(MainActivity.this, v);
+            popup.getMenuInflater().inflate(R.menu.main_menu, popup.getMenu());
+            popup.setOnMenuItemClickListener(item -> {
+                int itemId = item.getItemId();
+                if (itemId == R.id.menu_profile) {
+                    android.widget.Toast.makeText(this, "Profile clicked", android.widget.Toast.LENGTH_SHORT).show();
+                    return true;
+                } else if (itemId == R.id.menu_logout) {
+                    new com.example.clockedinprojectt9.utils.SessionManager(MainActivity.this).logoutUser();
+                    android.content.Intent intent = new android.content.Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                    return true;
+                }
+                return false;
+            });
+            popup.show();
         });
     }
 }
