@@ -3,6 +3,7 @@ package com.example.clockedinprojectt9;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.clockedinprojectt9.databinding.ActivityMainBinding;
+//import com.example.clockedinprojectt9.utils.DatabaseTestUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -18,6 +19,9 @@ public class MainActivity extends AppCompatActivity {
         // Set the content view to the root of the binding
         setContentView(binding.getRoot());
 
+        // Seed test data
+        //DatabaseTestUtils.seedTestData(this);
+
         // Navigate to FriendsActivity when the button is clicked
         binding.friendsButton.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(MainActivity.this, FriendsActivity.class);
@@ -30,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.msgButton.setOnClickListener(v -> {
-            // TODO: Implement Msg functionality
+            android.content.Intent intent = new android.content.Intent(MainActivity.this, ChatListActivity.class);
+            startActivity(intent);
         });
 
         binding.menuButton.setOnClickListener(v -> {

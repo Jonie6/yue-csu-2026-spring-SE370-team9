@@ -24,6 +24,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
 
     public interface OnFriendClickListener {
         void onRemoveClick(User friend);
+        void onItemClick(User friend);
     }
 
     public FriendAdapter(OnFriendClickListener listener) {
@@ -49,6 +50,12 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         
         // Set a default profile picture using a sample avatar resource
         holder.profileImageView.setImageResource(R.drawable.ic_account_box);
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(currentFriend);
+            }
+        });
 
         holder.menuButton.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(v.getContext(), v);

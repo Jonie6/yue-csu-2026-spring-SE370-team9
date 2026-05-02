@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.clockedinprojectt9.databinding.ActivityLoginBinding;
 import com.example.clockedinprojectt9.db.AppDataBase;
+import com.example.clockedinprojectt9.models.Friendship;
 import com.example.clockedinprojectt9.models.User;
 import com.example.clockedinprojectt9.utils.PasswordUtils;
 import com.example.clockedinprojectt9.utils.SessionManager;
@@ -39,6 +40,7 @@ public class LoginActivity extends AppCompatActivity {
         db = AppDataBase.getDatabase(this);
 
         binding.loginButton.setOnClickListener(v -> loginUser());
+        binding.demoModeButton.setOnClickListener(v -> setupDemoMode());
 
         binding.registerTextView.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
@@ -69,6 +71,75 @@ public class LoginActivity extends AppCompatActivity {
                     // Login failed
                     Toast.makeText(LoginActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
                 }
+            });
+        });
+    }
+
+    private void setupDemoMode() {
+        executorService.execute(() -> {
+            // Wipe existing data for a clean demo state
+            db.clearAllTables();
+
+            // Create Admin User
+            User admin = new User(
+                    "admin",
+                    "admin@example.com",
+                    PasswordUtils.hashPassword("password123"),
+                    "Admin User",
+                    "System Administrator",
+                    null,
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis(),
+                    true
+            );
+            long adminId = db.userDao().insert(admin);
+            admin.setUserId(adminId);
+
+            // Create Demo Users
+            String[][] demoUserData = {
+                    {"adam_m", "Adam Majed", "Software Engineer who loves hiking."},
+                    {"jonas_g", "Jonas Graham", "Coffee enthusiast and local artist."},
+                    {"luke_s", "Luke Schavel", "Always looking for new board game partners."},
+                    {"ryland_c", "Ryland Cummings", "Fitness coach and marathon runner."},
+                    {"tikhon_p", "Tikhon Peterson", "Movie buff and aspiring chef."}
+            };
+
+            for (String[] userData : demoUserData) {
+                String username = userData[0];
+                String displayName = userData[1];
+                String bio = userData[2];
+
+                User demoUser = new User(
+                        username,
+                        username + "@example.com",
+                        PasswordUtils.hashPassword("password123"),
+                        displayName,
+                        bio,
+                        null,
+                        System.currentTimeMillis(),
+                        System.currentTimeMillis(),
+                        true
+                );
+                long demoUserId = db.userDao().insert(demoUser);
+
+                // Create Friendship
+                Friendship friendship = new Friendship(
+                        adminId,
+                        demoUserId,
+                        adminId,
+                        "ACCEPTED",
+                        System.currentTimeMillis()
+                );
+                db.friendshipDao().sendFriendRequest(friendship);
+            }
+
+            final long finalAdminId = admin.getUserId();
+            runOnUiThread(() -> {
+                sessionManager.createLoginSession(finalAdminId);
+                Toast.makeText(LoginActivity.this, "Demo Mode: Admin Logged In", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
             });
         });
     }

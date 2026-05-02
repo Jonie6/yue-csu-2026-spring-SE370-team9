@@ -131,6 +131,13 @@ public class FriendsActivity extends AppCompatActivity {
                     }
                 });
             }
+
+            @Override
+            public void onItemClick(User friend) {
+                android.content.Intent intent = new android.content.Intent(FriendsActivity.this, ChatActivity.class);
+                intent.putExtra("receiver_id", friend.getUserId());
+                startActivity(intent);
+            }
         });
         friendsRecyclerView.setAdapter(friendsAdapter);
 
