@@ -47,6 +47,7 @@ public class DiscoverFragment extends Fragment implements EventAdapter.OnEventCl
 
         db = AppDataBase.getDatabase(requireContext());
         adapter = new EventAdapter(this);
+        adapter.setCurrentUserId(new SessionManager(requireContext()).getUserId());
         binding.discoverRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.discoverRecycler.setAdapter(adapter);
 
@@ -139,6 +140,16 @@ public class DiscoverFragment extends Fragment implements EventAdapter.OnEventCl
     public void onMapClick(Event event) {
         String uri = "geo:0,0?q=" + android.net.Uri.encode(event.getLocation());
         startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(uri)));
+    }
+
+    @Override
+    public void onCancelClick(Event event) {
+        executorService.execute(() -> {
+            db.eventDao().delete(event);
+            requireActivity().runOnUiThread(() -> 
+                Toast.makeText(requireContext(), "Event canceled: " + event.getTitle(), Toast.LENGTH_SHORT).show()
+            );
+        });
     }
 
     @Override

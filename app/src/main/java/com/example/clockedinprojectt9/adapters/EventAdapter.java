@@ -21,10 +21,12 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     private List<Long> attendingEventIds = new ArrayList<>();
     private final OnEventClickListener listener;
     private String actionButtonText = "RSVP";
+    private long currentUserId = -1;
 
     public interface OnEventClickListener {
         void onActionClick(Event event);
         void onMapClick(Event event);
+        void onCancelClick(Event event);
     }
 
     public EventAdapter(OnEventClickListener listener) {
@@ -33,6 +35,10 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
     public void setActionButtonText(String text) {
         this.actionButtonText = text;
+    }
+
+    public void setCurrentUserId(long userId) {
+        this.currentUserId = userId;
     }
 
     public void setEvents(List<Event> events, List<Long> attendingEventIds) {
@@ -55,7 +61,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         if (actionButtonText.equals("RSVP") && attendingEventIds.contains(event.getEventId())) {
             text = "Un-RSVP";
         }
-        holder.bind(event, listener, text);
+        holder.bind(event, listener, text, currentUserId);
     }
 
     @Override
@@ -71,7 +77,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             this.binding = binding;
         }
 
-        public void bind(Event event, OnEventClickListener listener, String actionText) {
+        public void bind(Event event, OnEventClickListener listener, String actionText, long currentUserId) {
             binding.txtEventTitle.setText(event.getTitle());
             
             SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault());
@@ -82,6 +88,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             binding.btnRsvp.setText(actionText);
             binding.btnRsvp.setOnClickListener(v -> listener.onActionClick(event));
             binding.btnViewMap.setOnClickListener(v -> listener.onMapClick(event));
+
+            if (event.getCreatorUserId() == currentUserId) {
+                binding.btnCancelEvent.setVisibility(android.view.View.VISIBLE);
+                binding.btnCancelEvent.setOnClickListener(v -> listener.onCancelClick(event));
+            } else {
+                binding.btnCancelEvent.setVisibility(android.view.View.GONE);
+            }
         }
     }
 }
