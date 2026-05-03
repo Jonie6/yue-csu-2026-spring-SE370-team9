@@ -35,4 +35,7 @@ public interface UserDao {
 
     @Query("SELECT * FROM users")
     LiveData<List<User>> getAllUsers();
+
+    @Query("SELECT * FROM users WHERE username LIKE :query AND user_id != :currentUserId")
+    LiveData<List<User>> searchUsers(String query, long currentUserId);
 }

@@ -37,6 +37,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/friendIdInput" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/searchSuggestionsRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/friendIdInput"
+        app:layout_constraintStart_toStartOf="@id/friendIdInput"
+        app:layout_constraintTop_toBottomOf="@id/friendIdInput"
+        tools:listitem="@layout/item_friend" />
+
     <TextView
         android:id="@+id/pendingRequestsTitle"
         android:layout_width="wrap_content"
