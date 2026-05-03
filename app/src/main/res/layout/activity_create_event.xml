@@ -74,11 +74,27 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"/>
 
-        <Button
-            android:id="@+id/btn_save_event"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save Event"/>
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_cancel_creation"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Cancel"/>
+
+            <Button
+                android:id="@+id/btn_save_event"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Save Event"/>
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

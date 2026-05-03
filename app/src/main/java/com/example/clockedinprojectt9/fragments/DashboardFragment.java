@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,6 +51,7 @@ public class DashboardFragment extends Fragment implements EventAdapter.OnEventC
 
         binding.activityFeedRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         activityAdapter = new EventAdapter(this);
+        activityAdapter.setCurrentUserId(sessionManager.getUserId());
         binding.activityFeedRecycler.setAdapter(activityAdapter);
 
         loadNextUp();
@@ -121,6 +123,16 @@ public class DashboardFragment extends Fragment implements EventAdapter.OnEventC
     public void onMapClick(Event event) {
         String uri = "geo:0,0?q=" + android.net.Uri.encode(event.getLocation());
         startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(uri)));
+    }
+
+    @Override
+    public void onCancelClick(Event event) {
+        executorService.execute(() -> {
+            db.eventDao().delete(event);
+            requireActivity().runOnUiThread(() -> 
+                Toast.makeText(requireContext(), "Event canceled: " + event.getTitle(), Toast.LENGTH_SHORT).show()
+            );
+        });
     }
 
     @Override

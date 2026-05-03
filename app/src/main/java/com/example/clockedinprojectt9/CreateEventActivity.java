@@ -45,6 +45,7 @@ public class CreateEventActivity extends AppCompatActivity {
         binding.btnPickStart.setOnClickListener(v -> pickDateTime(startCalendar, true));
         binding.btnPickEnd.setOnClickListener(v -> pickDateTime(endCalendar, false));
         
+        binding.btnCancelCreation.setOnClickListener(v -> finish());
         binding.btnSaveEvent.setOnClickListener(v -> saveEvent());
     }
 
