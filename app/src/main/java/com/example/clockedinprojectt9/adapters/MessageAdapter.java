@@ -25,9 +25,20 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private List<Message> messages = new ArrayList<>();
     private final long currentUserId;
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private boolean isGroupChat = false;
+    private java.util.Map<Long, String> userNames = new java.util.HashMap<>();
 
     public MessageAdapter(long currentUserId) {
         this.currentUserId = currentUserId;
+    }
+
+    public void setGroupChat(boolean groupChat) {
+        isGroupChat = groupChat;
+    }
+
+    public void setUserNames(java.util.Map<Long, String> userNames) {
+        this.userNames = userNames;
+        notifyDataSetChanged();
     }
 
     // Determines if message is type_sent or type_recieved by comparing userId
@@ -65,7 +76,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (holder instanceof SentMessageViewHolder) {
             ((SentMessageViewHolder) holder).bind(message, timeString);
         } else {
-            ((ReceivedMessageViewHolder) holder).bind(message, timeString);
+            String senderName = userNames.containsKey(message.getSenderId()) ? userNames.get(message.getSenderId()) : "User " + message.getSenderId();
+            ((ReceivedMessageViewHolder) holder).bind(message, timeString, isGroupChat, senderName);
         }
     }
 
@@ -98,16 +110,24 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         private final TextView contentText;
         private final TextView timestampText;
+        private final TextView senderNameText;
 
         public ReceivedMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             contentText = itemView.findViewById(R.id.textMessageContent);
             timestampText = itemView.findViewById(R.id.textMessageTimestamp);
+            senderNameText = itemView.findViewById(R.id.textMessageSender);
         }
 
-        public void bind(Message message, String time) {
+        public void bind(Message message, String time, boolean isGroup, String senderName) {
             contentText.setText(message.getContent());
             timestampText.setText(time);
+            if (isGroup && senderNameText != null) {
+                senderNameText.setVisibility(View.VISIBLE);
+                senderNameText.setText(senderName);
+            } else if (senderNameText != null) {
+                senderNameText.setVisibility(View.GONE);
+            }
         }
     }
 }

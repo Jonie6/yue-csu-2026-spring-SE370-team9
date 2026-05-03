@@ -24,6 +24,7 @@ public class ChatActivity extends AppCompatActivity {
     private MessageAdapter messageAdapter;
     private long currentUserId;
     private long receiverId;
+    private long eventId;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private AppDataBase db;
 
@@ -37,12 +38,12 @@ public class ChatActivity extends AppCompatActivity {
         // Get IDs from Session
         SessionManager sessionManager = new SessionManager(this);
         currentUserId = sessionManager.getUserId();
-        // Retrieve ID of person you are chatting with
+        
         receiverId = getIntent().getLongExtra("receiver_id", -1);
+        eventId = getIntent().getLongExtra("event_id", 0);
 
-        //Checks if user exists
-        if (receiverId == -1) {
-            Toast.makeText(this, "Error: User not found", Toast.LENGTH_SHORT).show();
+        if (receiverId == -1 && eventId == 0) {
+            Toast.makeText(this, "Error: Chat target not found", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -56,39 +57,64 @@ public class ChatActivity extends AppCompatActivity {
 
         backButton.setOnClickListener(v -> finish());
 
-        // Load receiver's name (Background thread for DB method -> UiThread for update)
-        executorService.execute(() -> {
-            User receiver = db.userDao().getUserById(receiverId);
-            if (receiver != null) {
-                runOnUiThread(() -> chatPartnerName.setText(receiver.getDisplayName()));
-            }
-        });
-
         // Setup RecyclerView
         messageAdapter = new MessageAdapter(currentUserId);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setStackFromEnd(true); // Show latest messages at the bottom
+        layoutManager.setStackFromEnd(true); 
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(messageAdapter);
 
-        // Setup Database Observation
-        db.messageDao().getChatHistory(currentUserId, receiverId).observe(this, messages -> {
-            messageAdapter.setMessages(messages);
-            // Auto-scroll to bottom when new messages arrive
-            if (messages != null && !messages.isEmpty()) {
-                recyclerView.smoothScrollToPosition(messages.size() - 1);
-            }
-        });
+        if (eventId != 0) {
+            // Group Chat
+            messageAdapter.setGroupChat(true);
+            executorService.execute(() -> {
+                com.example.clockedinprojectt9.models.Event event = db.eventDao().getEventById(eventId);
+                if (event != null) {
+                    runOnUiThread(() -> chatPartnerName.setText(event.getTitle() + " (Group)"));
+                }
+                
+                // Load all users to show names in group chat
+                java.util.List<User> allUsers = db.userDao().getAllUsersList();
+                java.util.Map<Long, String> nameMap = new java.util.HashMap<>();
+                for (User u : allUsers) {
+                    nameMap.put(u.getUserId(), u.getDisplayName());
+                }
+                runOnUiThread(() -> messageAdapter.setUserNames(nameMap));
+            });
+
+            db.messageDao().getGroupChatHistory(eventId).observe(this, messages -> {
+                messageAdapter.setMessages(messages);
+                if (messages != null && !messages.isEmpty()) {
+                    recyclerView.smoothScrollToPosition(messages.size() - 1);
+                }
+            });
+        } else {
+            // Private Chat
+            executorService.execute(() -> {
+                User receiver = db.userDao().getUserById(receiverId);
+                if (receiver != null) {
+                    runOnUiThread(() -> chatPartnerName.setText(receiver.getDisplayName()));
+                }
+            });
+
+            db.messageDao().getChatHistory(currentUserId, receiverId).observe(this, messages -> {
+                messageAdapter.setMessages(messages);
+                if (messages != null && !messages.isEmpty()) {
+                    recyclerView.smoothScrollToPosition(messages.size() - 1);
+                }
+            });
+        }
 
         // Send Message Logic
         sendButton.setOnClickListener(v -> {
             String content = messageInput.getText().toString().trim();
             if (!content.isEmpty()) {
                 long timestamp = System.currentTimeMillis();
-                Message message = new Message(currentUserId, receiverId, content, timestamp);
+                Long targetReceiverId = eventId != 0 ? null : receiverId;
+                Long targetEventId = eventId != 0 ? eventId : null;
+                Message message = new Message(currentUserId, targetReceiverId, targetEventId, content, timestamp);
                 executorService.execute(() -> {
                     db.messageDao().insert(message);
-                    
                 });
                 messageInput.setText("");
             }

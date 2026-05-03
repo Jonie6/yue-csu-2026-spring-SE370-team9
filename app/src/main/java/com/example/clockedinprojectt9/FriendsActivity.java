@@ -42,10 +42,6 @@ public class FriendsActivity extends AppCompatActivity {
         SessionManager sessionManager = new SessionManager(this);
         long currentUserId = sessionManager.getUserId();
 
-        // 1. Back Button
-        Button backButton = findViewById(R.id.backButton);
-        backButton.setOnClickListener(v -> finish());
-
         // 2. Add Friend by Username logic
         EditText friendIdInput = findViewById(R.id.friendIdInput);
         friendIdInput.setHint("Enter Username");
