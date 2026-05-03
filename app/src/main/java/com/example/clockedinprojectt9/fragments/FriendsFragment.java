@@ -1,6 +1,8 @@
 package com.example.clockedinprojectt9.fragments;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,17 +21,21 @@ import com.example.clockedinprojectt9.ChatActivity;
 import com.example.clockedinprojectt9.R;
 import com.example.clockedinprojectt9.adapters.FriendAdapter;
 import com.example.clockedinprojectt9.adapters.PendingRequestAdapter;
+import com.example.clockedinprojectt9.adapters.UserSearchAdapter;
 import com.example.clockedinprojectt9.db.AppDataBase;
 import com.example.clockedinprojectt9.models.Friendship;
 import com.example.clockedinprojectt9.models.User;
 import com.example.clockedinprojectt9.utils.SessionManager;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class FriendsFragment extends Fragment {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private UserSearchAdapter searchAdapter;
+    private LiveData<List<User>> currentSearchLiveData;
 
     @Nullable
     @Override
@@ -50,45 +57,57 @@ public class FriendsFragment extends Fragment {
         friendIdInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
         Button sendRequestButton = view.findViewById(R.id.sendRequestButton);
 
-        sendRequestButton.setOnClickListener(v -> {
-            String targetUsername = friendIdInput.getText().toString().trim();
-            if (!targetUsername.isEmpty()) {
-                executorService.execute(() -> {
-                    // Look up user by username
-                    User targetUser = db.userDao().getUserByUsername(targetUsername);
-                    
-                    if (targetUser == null) {
-                        requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "User not found", Toast.LENGTH_SHORT).show());
-                        return;
-                    }
-
-                    long targetUserId = targetUser.getUserId();
-
-                    if (targetUserId == currentUserId) {
-                        requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "You cannot add yourself", Toast.LENGTH_SHORT).show());
-                        return;
-                    }
-                    
-                    // Check if already friends or request pending
-                    Friendship existing = db.friendshipDao().getFriendship(currentUserId, targetUserId);
-                    if (existing != null) {
-                        requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "Already friends or request pending", Toast.LENGTH_SHORT).show());
-                        return;
-                    }
-
-                    // Create friendship with current user as SENDER
-                    Friendship request = new Friendship(currentUserId, targetUserId, currentUserId, "PENDING", System.currentTimeMillis());
-                    db.friendshipDao().sendFriendRequest(request);
-                    
-                    requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(requireContext(), "Request Sent to " + targetUsername + "!", Toast.LENGTH_SHORT).show();
-                        friendIdInput.setText("");
-                    });
-                });
+        RecyclerView searchSuggestionsRecyclerView = view.findViewById(R.id.searchSuggestionsRecyclerView);
+        searchSuggestionsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        searchAdapter = new UserSearchAdapter(
+            user -> {
+                friendIdInput.setText(user.getUsername());
+                searchSuggestionsRecyclerView.setVisibility(View.GONE);
+            },
+            user -> {
+                sendFriendRequest(user.getUsername(), currentUserId, db, friendIdInput);
+                searchSuggestionsRecyclerView.setVisibility(View.GONE);
             }
+        );
+        searchSuggestionsRecyclerView.setAdapter(searchAdapter);
+
+        friendIdInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString().trim();
+                
+                if (currentSearchLiveData != null) {
+                    currentSearchLiveData.removeObservers(getViewLifecycleOwner());
+                }
+
+                if (!query.isEmpty()) { 
+                    currentSearchLiveData = db.userDao().searchUsers("%" + query + "%", currentUserId);
+                    currentSearchLiveData.observe(getViewLifecycleOwner(), users -> {
+                        if (users != null && !users.isEmpty()) {
+                            searchAdapter.setUsers(users);
+                            searchSuggestionsRecyclerView.setVisibility(View.VISIBLE);
+                        } else {
+                            searchSuggestionsRecyclerView.setVisibility(View.GONE);
+                        }
+                    });
+                } else {
+                    searchSuggestionsRecyclerView.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
         });
 
-        // 3. Pending Requests List (Incoming only)
+        sendRequestButton.setOnClickListener(v -> {
+            String targetUsername = friendIdInput.getText().toString().trim();
+            sendFriendRequest(targetUsername, currentUserId, db, friendIdInput);
+        });
+
+        // 3. Pending Requests List (Both Incoming and Outgoing)
         RecyclerView pendingRecyclerView = view.findViewById(R.id.pendingRecyclerView);
         pendingRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         
@@ -106,6 +125,16 @@ public class FriendsFragment extends Fragment {
             public void onDecline(User sender) {
                 executorService.execute(() -> {
                     Friendship f = db.friendshipDao().getFriendship(currentUserId, sender.getUserId());
+                    if (f != null) {
+                        db.friendshipDao().removeFriendship(f);
+                    }
+                });
+            }
+
+            @Override
+            public void onCancel(User receiver) {
+                executorService.execute(() -> {
+                    Friendship f = db.friendshipDao().getFriendship(currentUserId, receiver.getUserId());
                     if (f != null) {
                         db.friendshipDao().removeFriendship(f);
                     }
@@ -146,9 +175,51 @@ public class FriendsFragment extends Fragment {
                 if (friends != null) friendsAdapter.setFriends(friends);
             });
 
-            // Observe ONLY incoming pending requests (where I am NOT the sender)
+            // Observe incoming pending requests
             db.friendshipDao().getIncomingRequestUsers(currentUserId).observe(getViewLifecycleOwner(), requests -> {
-                if (requests != null) pendingAdapter.setRequests(requests);
+                if (requests != null) pendingAdapter.setIncomingRequests(requests);
+            });
+
+            // Observe outgoing pending requests
+            db.friendshipDao().getOutgoingRequestUsers(currentUserId).observe(getViewLifecycleOwner(), requests -> {
+                if (requests != null) pendingAdapter.setOutgoingRequests(requests);
+            });
+        }
+    }
+
+    private void sendFriendRequest(String targetUsername, long currentUserId, AppDataBase db, EditText friendIdInput) {
+        if (!targetUsername.isEmpty()) {
+            executorService.execute(() -> {
+                // Look up user by username
+                User targetUser = db.userDao().getUserByUsername(targetUsername);
+                
+                if (targetUser == null) {
+                    requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "User not found", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                long targetUserId = targetUser.getUserId();
+
+                if (targetUserId == currentUserId) {
+                    requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "You cannot add yourself", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+                
+                // Check if already friends or request pending
+                Friendship existing = db.friendshipDao().getFriendship(currentUserId, targetUserId);
+                if (existing != null) {
+                    requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "Already friends or request pending", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                // Create friendship with current user as SENDER
+                Friendship request = new Friendship(currentUserId, targetUserId, currentUserId, "PENDING", System.currentTimeMillis());
+                db.friendshipDao().sendFriendRequest(request);
+                
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(requireContext(), "Request Sent to " + targetUsername + "!", Toast.LENGTH_SHORT).show();
+                    friendIdInput.setText("");
+                });
             });
         }
     }

@@ -17,12 +17,14 @@ import java.util.List;
 
 public class PendingRequestAdapter extends RecyclerView.Adapter<PendingRequestAdapter.PendingViewHolder> {
 
-    private List<User> requestUsers = new ArrayList<>();
+    private List<User> incomingRequests = new ArrayList<>();
+    private List<User> outgoingRequests = new ArrayList<>();
     private OnRequestListener listener;
 
     public interface OnRequestListener {
         void onAccept(User sender);
         void onDecline(User sender);
+        void onCancel(User receiver);
     }
 
     public PendingRequestAdapter(OnRequestListener listener) {
@@ -38,24 +40,38 @@ public class PendingRequestAdapter extends RecyclerView.Adapter<PendingRequestAd
 
     @Override
     public void onBindViewHolder(@NonNull PendingViewHolder holder, int position) {
-        User sender = requestUsers.get(position);
-        holder.pendingText.setText("Request from: " + sender.getUsername());
-        
-        holder.acceptBtn.setOnClickListener(v -> listener.onAccept(sender));
-        holder.declineBtn.setOnClickListener(v -> listener.onDecline(sender));
+        if (position < incomingRequests.size()) {
+            User sender = incomingRequests.get(position);
+            holder.pendingText.setText("Received from: " + sender.getUsername());
+            holder.acceptBtn.setVisibility(View.VISIBLE);
+            holder.declineBtn.setText("Decline");
+            holder.acceptBtn.setOnClickListener(v -> listener.onAccept(sender));
+            holder.declineBtn.setOnClickListener(v -> listener.onDecline(sender));
+        } else {
+            User receiver = outgoingRequests.get(position - incomingRequests.size());
+            holder.pendingText.setText("Sent to: " + receiver.getUsername());
+            holder.acceptBtn.setVisibility(View.GONE);
+            holder.declineBtn.setText("Cancel");
+            holder.declineBtn.setOnClickListener(v -> listener.onCancel(receiver));
+        }
     }
 
     @Override
     public int getItemCount() {
-        return requestUsers.size();
+        return incomingRequests.size() + outgoingRequests.size();
     }
 
-    public void setRequests(List<User> users) {
-        this.requestUsers = users;
+    public void setIncomingRequests(List<User> users) {
+        this.incomingRequests = users != null ? users : new ArrayList<>();
         notifyDataSetChanged();
     }
 
-    class PendingViewHolder extends RecyclerView.ViewHolder {
+    public void setOutgoingRequests(List<User> users) {
+        this.outgoingRequests = users != null ? users : new ArrayList<>();
+        notifyDataSetChanged();
+    }
+
+    static class PendingViewHolder extends RecyclerView.ViewHolder {
         TextView pendingText;
         Button acceptBtn, declineBtn;
 

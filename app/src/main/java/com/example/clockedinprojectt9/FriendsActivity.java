@@ -113,6 +113,16 @@ public class FriendsActivity extends AppCompatActivity {
                     }
                 });
             }
+
+            @Override
+            public void onCancel(User receiver) {
+                executorService.execute(() -> {
+                    Friendship f = db.friendshipDao().getFriendship(currentUserId, receiver.getUserId());
+                    if (f != null) {
+                        db.friendshipDao().removeFriendship(f);
+                    }
+                });
+            }
         });
         pendingRecyclerView.setAdapter(pendingAdapter);
 
@@ -150,7 +160,7 @@ public class FriendsActivity extends AppCompatActivity {
 
             // Observe ONLY incoming pending requests (where I am NOT the sender)
             db.friendshipDao().getIncomingRequestUsers(currentUserId).observe(this, requests -> {
-                if (requests != null) pendingAdapter.setRequests(requests);
+                if (requests != null) pendingAdapter.setIncomingRequests(requests);
             });
         }
     }
