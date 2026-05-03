@@ -92,7 +92,7 @@ public class DashboardFragment extends Fragment implements EventAdapter.OnEventC
             refreshFeed();
         });
 
-        db.eventDao().getUpcomingEvents(System.currentTimeMillis()).observe(getViewLifecycleOwner(), events -> {
+        db.eventDao().getVisibleUpcomingEvents(currentUserId, System.currentTimeMillis()).observe(getViewLifecycleOwner(), events -> {
             allActivityEvents = events != null ? events : new ArrayList<>();
             refreshFeed();
         });

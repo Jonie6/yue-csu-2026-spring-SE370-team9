@@ -118,6 +118,9 @@ public class FriendsFragment extends Fragment {
                     long u1 = Math.min(currentUserId, sender.getUserId());
                     long u2 = Math.max(currentUserId, sender.getUserId());
                     db.friendshipDao().acceptFriendRequest(u1, u2);
+                    requireActivity().runOnUiThread(() -> 
+                        Toast.makeText(requireContext(), "Friend request accepted!", Toast.LENGTH_SHORT).show()
+                    );
                 });
             }
 
@@ -127,6 +130,9 @@ public class FriendsFragment extends Fragment {
                     Friendship f = db.friendshipDao().getFriendship(currentUserId, sender.getUserId());
                     if (f != null) {
                         db.friendshipDao().removeFriendship(f);
+                        requireActivity().runOnUiThread(() -> 
+                            Toast.makeText(requireContext(), "Friend request declined", Toast.LENGTH_SHORT).show()
+                        );
                     }
                 });
             }
@@ -137,6 +143,9 @@ public class FriendsFragment extends Fragment {
                     Friendship f = db.friendshipDao().getFriendship(currentUserId, receiver.getUserId());
                     if (f != null) {
                         db.friendshipDao().removeFriendship(f);
+                        requireActivity().runOnUiThread(() -> 
+                            Toast.makeText(requireContext(), "Friend request canceled", Toast.LENGTH_SHORT).show()
+                        );
                     }
                 });
             }

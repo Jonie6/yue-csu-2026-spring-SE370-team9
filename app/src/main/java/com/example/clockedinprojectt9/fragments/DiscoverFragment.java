@@ -69,7 +69,7 @@ public class DiscoverFragment extends Fragment implements EventAdapter.OnEventCl
             updateAdapter();
         });
 
-        db.eventDao().getUpcomingEvents(System.currentTimeMillis()).observe(getViewLifecycleOwner(), events -> {
+        db.eventDao().getVisibleUpcomingEvents(currentUserId, System.currentTimeMillis()).observe(getViewLifecycleOwner(), events -> {
             if (events != null) {
                 List<Event> othersEvents = new ArrayList<>();
                 for (Event e : events) {
