@@ -76,69 +76,55 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setupDemoMode() {
+        Toast.makeText(this, "Seeding demo data...", Toast.LENGTH_SHORT).show();
         executorService.execute(() -> {
-            // Wipe existing data for a clean demo state
+            // Wipe existing data
             db.clearAllTables();
 
-            // Create Admin User
-            User admin = new User(
-                    "admin",
-                    "admin@example.com",
-                    PasswordUtils.hashPassword("password123"),
-                    "Admin User",
-                    "System Administrator",
-                    null,
-                    System.currentTimeMillis(),
-                    System.currentTimeMillis(),
-                    true
-            );
-            long adminId = db.userDao().insert(admin);
-            admin.setUserId(adminId);
+            String hashedPw = PasswordUtils.hashPassword("password123");
+            long now = System.currentTimeMillis();
 
-            // Create Demo Users
+            // Create Admin User
+            User admin = new User("admin", "admin@example.com", hashedPw, "Admin User", "System Administrator", null, now, now, true);
+            long adminId = db.userDao().insert(admin);
+
+            // Create Demo Users and Events
             String[][] demoUserData = {
-                    {"adam_m", "Adam Majed", "Software Engineer who loves hiking."},
-                    {"jonas_g", "Jonas Graham", "Coffee enthusiast and local artist."},
-                    {"luke_s", "Luke Schavel", "Always looking for new board game partners."},
-                    {"ryland_c", "Ryland Cummings", "Fitness coach and marathon runner."},
-                    {"tikhon_p", "Tikhon Peterson", "Movie buff and aspiring chef."}
+                    {"adam_m", "Adam Majed", "Software Engineer"},
+                    {"jonas_g", "Jonas Graham", "Coffee enthusiast"},
+                    {"luke_s", "Luke Schavel", "Board game fan"},
+                    {"ryland_c", "Ryland Cummings", "Fitness coach"},
+                    {"tikhon_p", "Tikhon Peterson", "Movie buff"}
             };
 
             for (String[] userData : demoUserData) {
-                String username = userData[0];
-                String displayName = userData[1];
-                String bio = userData[2];
-
-                User demoUser = new User(
-                        username,
-                        username + "@example.com",
-                        PasswordUtils.hashPassword("password123"),
-                        displayName,
-                        bio,
-                        null,
-                        System.currentTimeMillis(),
-                        System.currentTimeMillis(),
-                        true
-                );
+                User demoUser = new User(userData[0], userData[0] + "@example.com", hashedPw, userData[1], userData[2], null, now, now, true);
                 long demoUserId = db.userDao().insert(demoUser);
 
                 // Create Friendship
-                Friendship friendship = new Friendship(
-                        adminId,
+                db.friendshipDao().sendFriendRequest(new Friendship(adminId, demoUserId, adminId, "ACCEPTED", now));
+
+                // Create Demo Event for Discovery (Ensure start/end times are valid)
+                com.example.clockedinprojectt9.models.Event demoEvent = new com.example.clockedinprojectt9.models.Event(
+                        userData[1] + "'s Event",
+                        "Demo event at " + userData[1] + "'s place.",
+                        "Demo City, St. " + (int)(Math.random() * 100),
+                        now + 3600000,          // starts in 1 hour
+                        now + 7200000,          // ends in 2 hours
                         demoUserId,
-                        adminId,
-                        "ACCEPTED",
-                        System.currentTimeMillis()
+                        "Public",
+                        20,
+                        false,
+                        now,
+                        now
                 );
-                db.friendshipDao().sendFriendRequest(friendship);
+                db.eventDao().insert(demoEvent);
             }
 
-            final long finalAdminId = admin.getUserId();
             runOnUiThread(() -> {
-                sessionManager.createLoginSession(finalAdminId);
-                Toast.makeText(LoginActivity.this, "Demo Mode: Admin Logged In", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
+                sessionManager.createLoginSession(adminId);
+                Toast.makeText(LoginActivity.this, "Demo Mode Active", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(LoginActivity.this, MainActivity.class));
                 finish();
             });
         });

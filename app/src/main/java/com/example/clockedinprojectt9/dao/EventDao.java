@@ -35,4 +35,7 @@ public interface EventDao {
 
     @Query("SELECT * FROM events WHERE is_canceled = 0 AND end_time > :currentTime ORDER BY start_time ASC")
     LiveData<List<Event>> getUpcomingEvents(long currentTime);
+
+    @Query("SELECT e.* FROM events e INNER JOIN rsvps r ON e.event_id = r.event_id WHERE r.user_id = :userId AND e.end_time > :currentTime ORDER BY e.start_time ASC")
+    LiveData<List<Event>> getAttendingEvents(long userId, long currentTime);
 }
