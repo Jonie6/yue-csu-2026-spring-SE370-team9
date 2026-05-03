@@ -18,7 +18,7 @@ import com.example.clockedinprojectt9.models.User;
 import com.example.clockedinprojectt9.models.Friendship;
 
 
-@Database(entities = {User.class, Event.class, RSVP.class, Friendship.class, Message.class}, version = 4, exportSchema = false)
+@Database(entities = {User.class, Event.class, RSVP.class, Friendship.class, Message.class}, version = 6, exportSchema = false)
 public abstract class AppDataBase extends RoomDatabase {
 
     private static volatile AppDataBase INSTANCE;

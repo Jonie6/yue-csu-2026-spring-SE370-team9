@@ -112,9 +112,19 @@ public class DashboardFragment extends Fragment implements EventAdapter.OnEventC
         executorService.execute(() -> {
             if (attendingEventIds.contains(event.getEventId())) {
                 db.rsvpDao().deleteRsvp(userId, event.getEventId());
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(requireContext(), "unRSVP'd from " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                    com.example.clockedinprojectt9.utils.NotificationUtils.showNotification(requireContext(), 
+                        "Group Chat Removed", "You've been removed from the " + event.getTitle() + " group chat.");
+                });
             } else {
                 RSVP rsvp = new RSVP(event.getEventId(), userId, "Interested", now, now);
                 db.rsvpDao().insert(rsvp);
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(requireContext(), "RSVP'd to " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                    com.example.clockedinprojectt9.utils.NotificationUtils.showNotification(requireContext(), 
+                        "Added to Group Chat", "You've been added to the " + event.getTitle() + " group chat!");
+                });
             }
         });
     }

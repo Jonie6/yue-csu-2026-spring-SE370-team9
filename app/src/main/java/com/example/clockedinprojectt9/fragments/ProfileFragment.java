@@ -29,7 +29,8 @@ public class ProfileFragment extends Fragment implements EventAdapter.OnEventCli
     private FragmentProfileBinding binding;
     private AppDataBase db;
     private SessionManager sessionManager;
-    private EventAdapter adapter;
+    private EventAdapter myEventsAdapter;
+    private EventAdapter attendingEventsAdapter;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Nullable
@@ -47,13 +48,43 @@ public class ProfileFragment extends Fragment implements EventAdapter.OnEventCli
         sessionManager = new SessionManager(requireContext());
 
         binding.myEventsRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new EventAdapter(this);
-        adapter.setCurrentUserId(sessionManager.getUserId());
-        adapter.setActionButtonText("Edit");
-        binding.myEventsRecycler.setAdapter(adapter);
+        myEventsAdapter = new EventAdapter(this);
+        myEventsAdapter.setCurrentUserId(sessionManager.getUserId());
+        myEventsAdapter.setActionButtonText("Edit");
+        binding.myEventsRecycler.setAdapter(myEventsAdapter);
+
+        binding.attendingEventsRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+        attendingEventsAdapter = new EventAdapter(new EventAdapter.OnEventClickListener() {
+            @Override
+            public void onActionClick(Event event) {
+                // unRSVP logic
+                executorService.execute(() -> {
+                    db.rsvpDao().deleteRsvp(sessionManager.getUserId(), event.getEventId());
+                    requireActivity().runOnUiThread(() -> {
+                        Toast.makeText(requireContext(), "unRSVP'd from " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                        com.example.clockedinprojectt9.utils.NotificationUtils.showNotification(requireContext(), 
+                            "Group Chat Removed", "You've been removed from the " + event.getTitle() + " group chat.");
+                    });
+                });
+            }
+
+            @Override
+            public void onMapClick(Event event) {
+                ProfileFragment.this.onMapClick(event);
+            }
+
+            @Override
+            public void onCancelClick(Event event) {
+                // Not host of these events usually, but if they are, handle it
+                ProfileFragment.this.onCancelClick(event);
+            }
+        });
+        attendingEventsAdapter.setActionButtonText("unRSVP");
+        binding.attendingEventsRecycler.setAdapter(attendingEventsAdapter);
 
         loadUserData();
         loadMyEvents();
+        loadAttendingEvents();
 
         binding.btnLogout.setOnClickListener(v -> {
             sessionManager.logoutUser();
@@ -79,7 +110,16 @@ public class ProfileFragment extends Fragment implements EventAdapter.OnEventCli
         long userId = sessionManager.getUserId();
         db.eventDao().getEventsByCreator(userId).observe(getViewLifecycleOwner(), events -> {
             if (events != null) {
-                adapter.setEvents(events, null);
+                myEventsAdapter.setEvents(events, null);
+            }
+        });
+    }
+
+    private void loadAttendingEvents() {
+        long userId = sessionManager.getUserId();
+        db.eventDao().getAttendingEvents(userId, 0).observe(getViewLifecycleOwner(), events -> {
+            if (events != null) {
+                attendingEventsAdapter.setEvents(events, null);
             }
         });
     }

@@ -41,7 +41,7 @@
         android:id="@+id/searchSuggestionsRecyclerView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="#333333"
+        android:background="?attr/colorSurface"
         android:elevation="8dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@id/friendIdInput"
