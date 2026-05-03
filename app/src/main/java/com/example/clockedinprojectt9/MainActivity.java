@@ -1,9 +1,17 @@
 package com.example.clockedinprojectt9;
 
+import android.content.Intent;
 import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+
 import com.example.clockedinprojectt9.databinding.ActivityMainBinding;
-//import com.example.clockedinprojectt9.utils.DatabaseTestUtils;
+import com.example.clockedinprojectt9.fragments.DashboardFragment;
+import com.example.clockedinprojectt9.fragments.DiscoverFragment;
+import com.example.clockedinprojectt9.fragments.FriendsFragment;
+import com.example.clockedinprojectt9.fragments.MessagesFragment;
+import com.example.clockedinprojectt9.fragments.ProfileFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -13,49 +21,44 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Inflate the layout using view binding
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-        
-        // Set the content view to the root of the binding
         setContentView(binding.getRoot());
 
-        // Seed test data
-        //DatabaseTestUtils.seedTestData(this);
+        // Set default fragment
+        if (savedInstanceState == null) {
+            loadFragment(new DashboardFragment());
+        }
 
-        // Navigate to FriendsActivity when the button is clicked
-        binding.friendsButton.setOnClickListener(v -> {
-            android.content.Intent intent = new android.content.Intent(MainActivity.this, FriendsActivity.class);
-            startActivity(intent);
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+
+            if (itemId == R.id.nav_dashboard) {
+                loadFragment(new DashboardFragment());
+                return true;
+            } else if (itemId == R.id.nav_discover) {
+                loadFragment(new DiscoverFragment());
+                return true;
+            } else if (itemId == R.id.nav_social) {
+                loadFragment(new FriendsFragment());
+                return true;
+            } else if (itemId == R.id.nav_messages) {
+                loadFragment(new MessagesFragment());
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                loadFragment(new ProfileFragment());
+                return true;
+            }
+            return false;
         });
 
-        // Placeholder listeners for new buttons
-        binding.createButton.setOnClickListener(v -> {
-            // TODO: Implement Create functionality
+        binding.fabCreateEvent.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, CreateEventActivity.class));
         });
+    }
 
-        binding.msgButton.setOnClickListener(v -> {
-            android.content.Intent intent = new android.content.Intent(MainActivity.this, ChatListActivity.class);
-            startActivity(intent);
-        });
-
-        binding.menuButton.setOnClickListener(v -> {
-            android.widget.PopupMenu popup = new android.widget.PopupMenu(MainActivity.this, v);
-            popup.getMenuInflater().inflate(R.menu.main_menu, popup.getMenu());
-            popup.setOnMenuItemClickListener(item -> {
-                int itemId = item.getItemId();
-                if (itemId == R.id.menu_profile) {
-                    android.widget.Toast.makeText(this, "Profile clicked", android.widget.Toast.LENGTH_SHORT).show();
-                    return true;
-                } else if (itemId == R.id.menu_logout) {
-                    new com.example.clockedinprojectt9.utils.SessionManager(MainActivity.this).logoutUser();
-                    android.content.Intent intent = new android.content.Intent(MainActivity.this, LoginActivity.class);
-                    startActivity(intent);
-                    finish();
-                    return true;
-                }
-                return false;
-            });
-            popup.show();
-        });
+    private void loadFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 }
