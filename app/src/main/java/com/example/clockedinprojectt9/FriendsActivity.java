@@ -133,6 +133,10 @@ public class FriendsActivity extends AppCompatActivity {
                     Friendship f = db.friendshipDao().getFriendship(currentUserId, friend.getUserId());
                     if (f != null) {
                         db.friendshipDao().removeFriendship(f);
+                        // Remove RSVPs to "Friends Only" events since they are no longer friends
+                        db.rsvpDao().deleteFriendsOnlyRsvps(currentUserId, friend.getUserId());
+                        db.rsvpDao().deleteFriendsOnlyRsvps(friend.getUserId(), currentUserId);
+
                         runOnUiThread(() -> Toast.makeText(FriendsActivity.this, "Friend removed", Toast.LENGTH_SHORT).show());
                     }
                 });

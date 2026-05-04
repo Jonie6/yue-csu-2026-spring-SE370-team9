@@ -163,6 +163,10 @@ public class FriendsFragment extends Fragment {
                     Friendship f = db.friendshipDao().getFriendship(currentUserId, friend.getUserId());
                     if (f != null) {
                         db.friendshipDao().removeFriendship(f);
+                        // Remove RSVPs to "Friends Only" events since they are no longer friends
+                        db.rsvpDao().deleteFriendsOnlyRsvps(currentUserId, friend.getUserId());
+                        db.rsvpDao().deleteFriendsOnlyRsvps(friend.getUserId(), currentUserId);
+
                         requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "Friend removed", Toast.LENGTH_SHORT).show());
                     }
                 });
