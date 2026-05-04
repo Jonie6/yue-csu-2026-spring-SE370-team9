@@ -62,6 +62,18 @@ public class CreateEventActivity extends AppCompatActivity {
                     endCalendar.setTimeInMillis(event.getEndTime());
                     updateLabel(startCalendar, true);
                     updateLabel(endCalendar, false);
+
+                    // Set visibility spinner
+                    String visibility = event.getVisibility();
+                    if (visibility != null) {
+                        ArrayAdapter<String> adapter = (ArrayAdapter<String>) binding.spinnerVisibility.getAdapter();
+                        if (adapter != null) {
+                            int position = adapter.getPosition(visibility);
+                            if (position != -1) {
+                                binding.spinnerVisibility.setSelection(position);
+                            }
+                        }
+                    }
                 });
             }
         });
