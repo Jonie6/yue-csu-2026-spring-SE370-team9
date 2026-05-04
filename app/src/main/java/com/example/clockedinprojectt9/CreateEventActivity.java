@@ -136,6 +136,10 @@ public class CreateEventActivity extends AppCompatActivity {
             
             runOnUiThread(() -> {
                 Toast.makeText(CreateEventActivity.this, eventId == -1 ? "Event Created" : "Event Updated", Toast.LENGTH_SHORT).show();
+                if (eventId == -1) {
+                    com.example.clockedinprojectt9.utils.NotificationUtils.showNotification(CreateEventActivity.this, 
+                        "Group Chat Created", "You've been added to the " + title + " group chat as host.");
+                }
                 finish();
             });
         });

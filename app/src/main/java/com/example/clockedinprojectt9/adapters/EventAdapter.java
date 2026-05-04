@@ -59,7 +59,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         Event event = events.get(position);
         String text = actionButtonText;
         if (actionButtonText.equals("RSVP") && attendingEventIds.contains(event.getEventId())) {
-            text = "Un-RSVP";
+            text = "unRSVP";
         }
         holder.bind(event, listener, text, currentUserId);
     }
@@ -92,8 +92,16 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             if (event.getCreatorUserId() == currentUserId) {
                 binding.btnCancelEvent.setVisibility(android.view.View.VISIBLE);
                 binding.btnCancelEvent.setOnClickListener(v -> listener.onCancelClick(event));
+                
+                // Hide RSVP button for host, but keep it if it's "Edit"
+                if (actionText.equalsIgnoreCase("RSVP") || actionText.equalsIgnoreCase("unRSVP")) {
+                    binding.btnRsvp.setVisibility(android.view.View.GONE);
+                } else {
+                    binding.btnRsvp.setVisibility(android.view.View.VISIBLE);
+                }
             } else {
                 binding.btnCancelEvent.setVisibility(android.view.View.GONE);
+                binding.btnRsvp.setVisibility(android.view.View.VISIBLE);
             }
         }
     }

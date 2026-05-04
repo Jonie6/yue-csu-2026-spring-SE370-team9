@@ -85,7 +85,7 @@ public class MessagesFragment extends Fragment {
             updateChatList();
         });
 
-        db.eventDao().getAttendingEvents(currentUserId, 0).observe(getViewLifecycleOwner(), events -> {
+        db.eventDao().getParticipatingEvents(currentUserId, 0).observe(getViewLifecycleOwner(), events -> {
             this.attendingEvents = events != null ? events : new ArrayList<>();
             updateChatList();
         });

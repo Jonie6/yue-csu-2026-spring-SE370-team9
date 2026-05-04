@@ -29,7 +29,10 @@ public interface MessageDao {
     @Query("SELECT * FROM messages WHERE event_id = :eventId ORDER BY timestamp ASC")
     LiveData<List<Message>> getGroupChatHistory(long eventId);
 
-    @Query("SELECT * FROM messages WHERE (sender_id = :userId OR receiver_id = :userId OR event_id IN (SELECT event_id FROM rsvps WHERE user_id = :userId)) ORDER BY timestamp DESC")
+    @Query("SELECT * FROM messages WHERE (sender_id = :userId OR receiver_id = :userId OR " +
+           "event_id IN (SELECT event_id FROM rsvps WHERE user_id = :userId) OR " +
+           "event_id IN (SELECT event_id FROM events WHERE creator_user_id = :userId)) " +
+           "ORDER BY timestamp DESC")
     LiveData<List<Message>> getAllRelevantMessages(long userId);
 
 }

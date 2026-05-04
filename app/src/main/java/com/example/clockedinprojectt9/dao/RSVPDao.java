@@ -38,4 +38,7 @@ public interface RSVPDao {
 
     @Query("DELETE FROM rsvps WHERE event_id = :eventId AND user_id = :userId")
     void deleteRsvp(long userId, long eventId);
+
+    @Query("DELETE FROM rsvps WHERE user_id = :userId AND event_id IN (SELECT event_id FROM events WHERE creator_user_id = :creatorId AND visibility = 'Friends Only')")
+    void deleteFriendsOnlyRsvps(long userId, long creatorId);
 }

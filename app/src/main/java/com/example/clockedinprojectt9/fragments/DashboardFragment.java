@@ -61,7 +61,7 @@ public class DashboardFragment extends Fragment implements EventAdapter.OnEventC
     private void loadNextUp() {
         long userId = sessionManager.getUserId();
         long currentTime = System.currentTimeMillis();
-        db.eventDao().getAttendingEvents(userId, currentTime).observe(getViewLifecycleOwner(), events -> {
+        db.eventDao().getParticipatingEvents(userId, currentTime).observe(getViewLifecycleOwner(), events -> {
             if (events != null && !events.isEmpty()) {
                 Event nextEvent = events.get(0);
                 binding.nextUpTitle.setText(nextEvent.getTitle());
